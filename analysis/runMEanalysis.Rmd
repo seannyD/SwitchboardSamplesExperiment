@@ -114,6 +114,9 @@ Center trial number, so that the intercept will reflect probabilities in the mid
 
 ```{r}
 d$trialNumber.center = d$trialNumber - 25
+# Scale between -1 and 1
+d$trialNumber.center = d$trialNumber.center / 
+  max(d$trialNumber.center)
 ```
 
 
@@ -147,11 +150,6 @@ dotplot(ranef(m3))[[2]]
 ```
 
 The sample "IN 18" is an outlier.  However, models have convergence problems when leaving it out.
-
-```{r}
-# Commented out - not run
-#d = d[d$contextSample != 'IN 18',]
-```
 
 The data has `r nrow(d)` observations:
 
@@ -199,7 +197,7 @@ In order to get an idea of the structure of the data, we make a binary decision 
 ```{r}
 cx.simple = ctree(answer ~ 
              context +responsePhoneme + responseType, data = d)
-plot(cx.simple, terminal_panel=node_barplot(cx))
+plot(cx.simple, terminal_panel=node_barplot(cx.simple))
 ```
 
 And here is a more detailed analysis:
@@ -621,6 +619,7 @@ anova(conXrPh, trialXCon, trialXph, trXcoXph)
 
 Significant interaction between trial and context, but no reliable further interaction.
 
+\newpage
 *Effect of stimulus set*
 
 Below we adjust the random effects so that participants are nested within stimulus set (the variable *blockName*).
@@ -647,7 +646,6 @@ cbind(fixef(trialXCon),fixef(stimSet))
 ```
 
 
-
 \newpage
 
 ## Results
@@ -655,7 +653,6 @@ cbind(fixef(trialXCon),fixef(stimSet))
 Model comparison
 
 ```{r}
-
 anova(m0, trial, context,rPhon, conXrPh, trialXCon)
 ```
 \newpage
@@ -687,7 +684,14 @@ cx = summary(finalModel)$coef
 cx = cbind(cx[,1],CI,cx[,2:4])
 cx2 = cx
 for(i in 1:5){cx2[,i] = round(cx2[,i],3)}
+cx2 = as.data.frame(cx2)
+names(cx2)[1] = "estimate.logit"
+cx2$esimate.odds = exp(cx2[,1])
+cx2$esimate.odds.lower = exp(cx2[,2])
+cx2$esimate.odds.upper = exp(cx2[,2])
+
 cx2
+
 write.csv(cx, "../results/FinalModelCoefficients.csv")
 ```
 
@@ -698,8 +702,22 @@ write.csv(cx, "../results/FinalModelCoefficients.csv")
 
 ```{r}
 dotplot(ranef(finalModel))
+x = as.data.frame(ranef(finalModel)$partID)
+rownames(x) = rownames(ranef(finalModel)$partID)
+for(i in 1:ncol(x)){
+  x = x[order(x[,i]),]
+  plot(x[,i],1:nrow(x),
+       main = paste("PartID,",colnames(x)[i]),
+       yaxt='n',
+       ylab='partID', xlab='')
+  abline(v=0)
+  axis(2,at=1:nrow(x),labels=rownames(x), las=2)
+}
+
+
 ```
 
+Note that the intercept for partID is exactly correlated with the random slope for contextIN by partID.
 
 \newpage
 
@@ -707,11 +725,15 @@ dotplot(ranef(finalModel))
 
 Here is a summary of the main results:
 
-`r getMEText(anova(m0,context), "main effect of context")`
+`r getMEText(anova(trial,context), "main effect of context")`
 
 `r getMEText(anova(context,rPhon), "main effect of phoneme")`
 
 `r getMEText(anova(rPhon,conXrPh), "interaction between context and phoneme")`
+
+`r getMEText(anova(m0, trial), "main effect of trial")`
+
+
 
 Work out model esimates for probabilities in each condition:
   
@@ -835,3 +857,76 @@ main.plot2
 dev.off()
 
 ```
+
+\newpage
+
+# Predicting response type
+
+
+```{r}
+d2 = d[d$responsePhoneme!="none",]
+
+table(d2$answer,d2$responseType)
+
+d2$correct = "Correct"
+d2$correct[!d2$answer & d2$responseType=="Q"] = "Incorrect"
+d2$correct[d2$answer & d2$responseType=="other"] = "Incorrect"
+# number of "correct" responses
+table(d2$correct)
+
+```
+
+```{r}
+m0T = glmer(answer ~ 1 + context*responsePhoneme +
+          (1 + context | partID) +   
+          (1 | contextSample) +
+          (1 | responseSample) ,
+           data = d2,
+           family = binomial,
+          control=gcontrol)
+
+respT = glmer(answer ~ 1 + context*responsePhoneme +
+                responseType +
+          (1 + context | partID) +   
+          (1 | contextSample) +
+          (1 | responseSample) ,
+           data = d2,
+           family = binomial,
+          control=gcontrol)
+
+respTXco = glmer(answer ~ 1 + context*responsePhoneme +
+                responseType*context +
+          (1 + context | partID) +   
+          (1 | contextSample) +
+          (1 | responseSample) ,
+           data = d2,
+           family = binomial,
+          control=gcontrol)
+
+respTXrp = glmer(answer ~ 1 + context*responsePhoneme +
+                responseType*context +
+                + responseType: responsePhoneme +
+          (1 + context | partID) +   
+          (1 | contextSample) +
+          (1 | responseSample) ,
+           data = d2,
+           family = binomial,
+          control=gcontrol)
+
+rTXcoXrp = glmer(answer ~ 1 + context*responsePhoneme +
+                responseType*context *responsePhoneme +
+          (1 + context | partID) +   
+          (1 | contextSample) +
+          (1 | responseSample) ,
+           data = d2,
+           family = binomial,
+          control=gcontrol)
+
+anova(m0T, respT, respTXco, respTXrp, rTXcoXrp)
+
+```
+
+No effects of actual response type.
+
+
+
