@@ -130,8 +130,8 @@ Are there any samples that look like outliers?  Make a basic model:
 
 ```{r cache=T}
 m3 = glmer(
-  answer ~ 1 +
-    (1  | partID) +   
+  answer ~ 1 + context + responsePhoneme +
+    (1 | partID) +   
     (1 | contextSample) +
     (1 | responseSample),   
   data = d,
@@ -179,7 +179,9 @@ plotmeans(answer ~ cut(trialNumber,seq(0,50,length.out = 11), include.lowest = T
 
 plotmeans(d$answer ~ d$blockName,
           ylab = "Prob of answering 'Question'",
-          xlab = 'Stimulus set')
+          xlab = 'Stimulus set',
+          connect=F,
+          ylim=c(0,1))
 
 plotmeans(answer ~ lastAnswer,
           ylab = "Prob of answering 'Question'",
