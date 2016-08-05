@@ -181,7 +181,7 @@ samplesExtraData$contextSample = paste(samplesExtraData$contextSample,samplesExt
 write.csv(samplesExtraData, "../Data/SamplesExtraData.csv", row.names = F)
 
 
-
+########
 allLab$context.sex = samplesExtraData[match(allLab$contextSample,samplesExtraData$contextSample),]$sex
 allLab$response.sex = samplesExtraData[match(allLab$responseSample,samplesExtraData$responseSample),]$sex
 
@@ -193,3 +193,19 @@ allLab$response.firstO= samplesExtraData[match(allLab$responseSample,samplesExtr
 
 write.csv(allLab,"../Data/Lab_Processed.csv")
 
+
+########
+
+allDat = read.csv("../Data/Lab_and_Online_data_Processed.csv")
+
+
+allDat$context.sex = samplesExtraData[match(allDat$contextSample,samplesExtraData$contextSample),]$sex
+allDat$response.sex = samplesExtraData[match(allDat$responseSample,samplesExtraData$responseSample),]$sex
+
+trx = gsub("\\[[^]]+\\]","",samplesExtraData$transcription)
+trx = gsub(" ",'',trx)
+
+samplesExtraData$response.firstO = substr(trx,0,1)
+allDat$response.firstO= samplesExtraData[match(allDat$responseSample,samplesExtraData$responseSample),]$response.firstO
+
+write.csv(allDat,"../Data/Lab_and_Online_data_Processed.csv")
