@@ -194,7 +194,15 @@ plotmeans(answer ~ lastAnswer,
 
 # Decision tree
 
-In order to get an idea of the structure of the data, we make a binary decision tree based on the data.  We try to predict the participant's response by context, the type of turn the response was taken from and the participants' age, sex and the type of English they speak (American, British, or other, which are the main groups).
+In order to get an idea of the structure of the data, we make a binary decision tree based on the data.  We try to predict the participant's response by context and the type of turn the response was taken from.
+
+```{r}
+cx.simple = ctree(answer ~ 
+             context +responsePhoneme + responseType, data = d)
+plot(cx.simple, terminal_panel=node_barplot(cx))
+```
+
+And here is a more detailed analysis:
 
 ```{r}
 cx = ctree(answer ~ 
@@ -211,7 +219,7 @@ cx = ctree(answer ~
 Plot the decision tree:
 
 ```{r}
-plot(cx, terminal_panel=node_barplot)
+plot(cx, terminal_panel=node_barplot(cx, id=F))
 ```
 
 Context is the most important factor, followed by first phoneme of the response.
@@ -648,7 +656,7 @@ Model comparison
 
 ```{r}
 
-anova(trial, context,rPhon, conXrPh, trialXCon)
+anova(m0, trial, context,rPhon, conXrPh, trialXCon)
 ```
 \newpage
 
@@ -782,6 +790,8 @@ sumStats = group_by(d, partID ,context,responsePhoneme ) %>%
 sumStats2 = summarySE(sumStats, measurevar="mean", groupvars=c("context","responsePhoneme"))
 sumStats2$upper = sumStats2$mean + sumStats2$ci
 sumStats2$lower = sumStats2$mean - sumStats2$ci
+
+sumStats2
 
 dodge <- position_dodge(width=0.5) 
 
