@@ -736,7 +736,7 @@ cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt
 
 *Effect of stimulus set*
 
-Below we adjust the random effects so that participants are nested within stimulus set (the variable *blockName*).
+Below we adjust the random effects so that participants are nested within stimulus set (the variable *blockName*).  
 
 ```{r stimSetTest, cache=T}
 stimSet = glmer(
@@ -753,10 +753,16 @@ stimSet = glmer(
  )
 ```
 
-The model does not converge, so the statistics from this model are not reliable.  However, we can see that the estimates are very similar, suggesting that stimulus set does not have an impact on the main findings.
+```{r stimSetAnova, cache=T}
+anova(trialXCon,stimSet)
+```
+
+There is no significant improvement in the model, and in any case the stimuli sets are counterbalanced experimentally, so we don't include it.  
+
+In any case, the qualitative results are the same, and the estimates are very similar, suggesting that stimulus set does not have an impact on the main findings.
 
 ```{r}
-cbind(fixef(trialXCon),fixef(stimSet))
+cbind(without=fixef(trialXCon),withRForStimSet=fixef(stimSet))
 ```
 
 \newpage
