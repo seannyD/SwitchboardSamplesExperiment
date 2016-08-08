@@ -106,7 +106,7 @@ d$lastAnswer = d$lastAnswer=="Yes"
 Relevel response phoneme and context.
 
 ```{r}
-d$responsePhoneme = relevel(d$responsePhoneme, 'other')
+d$responsePhoneme = relevel(d$responsePhoneme, 'wh')
 d$context = relevel(d$context, 'ST')
 ```
 
@@ -132,7 +132,7 @@ d = d[as.character(d$partID)!="13",]
 Are there any samples that look like outliers?  Make a basic model:
 
 ```{r cache=T}
-m3 = glmer(
+m3 = glmer( 
   answer ~ 1 + context + responsePhoneme +
     (1 | partID) +   
     (1 | contextSample) +
@@ -241,7 +241,7 @@ We have a good idea of what the random effects structure should be, but first we
 
 ```{r ranEfModels, cache=T}
 mA0 = glmer(
-  answer ~ 1 + 
+  answer ~ 1 +  
     (1 | partID),   
   data = d,
   family = binomial,
@@ -256,14 +256,25 @@ mA0b = glmer(
   family = binomial,
   control = gcontrol
 )
-anova(mA0,mA0b)
+ltrf = anova(mA0,mA0b)
+ltrf
 ```
 
 There is no significant improvement in the model when taking stimulus set into account. Because it complicates the analysis, we'll leave it out.
 
+```{r echo=F}
+write.csv(as.data.frame(ltrf),"../results/lmerTests/RandomEffects.csv")
+cat("Mixed effect models summary\n\n", 
+    "../results/lmerTests/lmerTestSummary.txt")
+rx  = getMEText(ltrf,"improvement in the fit of the model when adding a random effect for stimulus set")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
+
+
 ```{r ranefModels2, cache=T}
 mA1 = glmer(
-  answer ~ 1 + 
+  answer ~ 1 +  
     (1 | partID) +   
     (1 | contextSample),  
   data = d,
@@ -302,11 +313,25 @@ mA4 = glmer(
   control = gcontrol
 )
 
-anova(mA0, mA1, mA2, mA3, mA4)
-
+ltrf2 = anova(mA0, mA1, mA2, mA3, mA4)
+ltrf2
 ```
 
 All proposed random effects significantly improve the fit of the model, except for the random slope for responsePhoneme by participant.  Adding the correlation term between random effects slopes causes serious convergence issues, so we leave that out.
+
+```{r echo=F}
+write.csv(as.data.frame(ltrf2),"../results/lmerTests/RandomEffects2.csv")
+rx  = getMEText(anova(mA0,mA1),"improvement in the fit of the model when adding a random effect for context sample")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(mA1,mA2),"improvement in the fit of the model when adding a random effect for response sample")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(mA2,mA3),"improvement in the fit of the model when adding a random slope for context by participant")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(mA2,mA3),"improvement in the fit of the model when adding a random slope for response phoneme by participant")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+
+```
+
 
 ## Fixed effects
 
@@ -316,7 +341,7 @@ We are most interested in the effects of context and response type, but we need 
 
 ```{r fixefModels,cache=T}
 m0 = glmer(
-  answer ~ 1 + 
+  answer ~ 1 +  
     (1 + context | partID) +   
     (0 + responsePhoneme | partID) +
     (1 | contextSample) +
@@ -349,15 +374,24 @@ trialQ = glmer(
 )
 
 
-anova(m0,trial, trialQ)
+lttr = anova(m0,trial, trialQ)
+lttr
 ```
 
 A significant effect of trial, but no significant quadratic term.
 
+```{r echo=F}
+write.csv(as.data.frame(lttr),"../results/lmerTests/Trial.csv")
+rx  = getMEText(anova(m0,trial),"effect of trial")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(trial,trialQ),"quadratic effect of trial")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
 *Previous answer*
 
 ```{r fixefModels2, cache=T}
-prevAns = glmer(
+prevAns = glmer( 
   answer ~ 1 + trialNumber.center + lastAnswer +
     (1 + context | partID) +   
     (0 + responsePhoneme | partID) +
@@ -367,17 +401,23 @@ prevAns = glmer(
   family = binomial,
   control = gcontrol
 )
-anova(trial,prevAns)
-
+ltpa = anova(trial,prevAns)
+ltpa
 ```
 
 No significant effect of previous answer.
+
+```{r echo=F}
+write.csv(as.data.frame(ltpa),"../results/lmerTests/PreviousAnswer.csv")
+rx  = getMEText(ltpa,"effect of previous answer")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
 
 *Sex of speakers in samples*
 
 ```{r, fixefModels3,cache=T}
 
-contS = glmer(
+contS = glmer( 
   answer ~ 1 + trialNumber.center + 
     context.sex +
     (1 + context | partID) +   
@@ -414,16 +454,27 @@ contXrespS = glmer(
 )
 
 
-anova(trial,contS, respS, contXrespS)
+ltsx = anova(trial,contS, respS, contXrespS)
+ltsx
 
 ```
 
 No significant effects of the sex of the speakers in the samples.
 
+```{r echo=F}
+write.csv(as.data.frame(ltsx),"../results/lmerTests/SexOfSpeakers.csv")
+rx  = getMEText(anova(trial,contS),"effect of context speaker sex")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(contS,respS),"response speaker sex")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(respS, contXrespS),"interaction between context speaker sex and response speaker sex")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
 *Sex of participants*
 
 ```{r fixefModels4, cache=T}
-sex = glmer(
+sex = glmer( 
   answer ~ 1 + trialNumber.center + Sex +
     (1 + context | partID) +   
     (0 + responsePhoneme | partID) +
@@ -434,15 +485,49 @@ sex = glmer(
   control = gcontrol
 )
 
-anova(trial,sex)
+ltsxp = anova(trial,sex)
+ltsxp
 ```
 
 No significant effect of the sex of the participant.
 
+```{r echo=F}
+write.csv(as.data.frame(ltsxp),"../results/lmerTests/SexOfParticipants.csv")
+rx  = getMEText(ltsxp,"effect of participant sex")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
+
+*Age of participants*
+
+```{r}
+age = glmer( 
+  answer ~ 1 + trialNumber.center + Age +
+    (1 + context | partID) +   
+    (0 + responsePhoneme | partID) +
+    (1 | contextSample) +
+    (1 | responseSample) ,   
+  data = d,
+  family = binomial,
+  control = gcontrol
+)
+
+ltag = anova(trial,age)
+ltag
+```
+
+No significant effect of age of partcipant.
+
+```{r echo=F}
+write.csv(as.data.frame(ltag),"../results/lmerTests/AgeOfParticipants.csv")
+rx  = getMEText(ltag,"effect of participant age")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
 *Type of English spoken*
 
 ```{r fixefModels5, cache=T}
-Etype = glmer(
+Etype = glmer( 
   answer ~ 1 + trialNumber.center + EnglishType +
     (1 + context | partID) +   
     (0 + responsePhoneme | partID) +
@@ -453,18 +538,25 @@ Etype = glmer(
   control = gcontrol
 )
 
-anova(trial,Etype)
+lten = anova(trial,Etype)
+lten
 ```
 
 No significant effec of the type of English the participant speaks.
 
+```{r echo=F}
+write.csv(as.data.frame(lten),"../results/lmerTests/DialectOfParticipants.csv")
+rx  = getMEText(lten,"effect of dialect")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
 ### Effects of Context and Response
 
-The only significant confounding variable is trial.
+The only significant confounding variable is trial, so that forms the baseline.
 
 ```{r fixefModels6, cache=T}
 
-context = glmer(
+context = glmer( 
   answer ~ 1 + trialNumber.center + 
     context +
     (1 + context | partID) +   
@@ -503,11 +595,10 @@ conXrPh = glmer(
 anova(trial, context,rPhon, conXrPh)
 ```
 
-
 *Interaction between Sex and responses*
 
 ```{r fixefModels7, cache=T}
-Sex = glmer(
+Sex = glmer( 
   answer ~ 1 + trialNumber.center +
     context * responsePhoneme +
     Sex +
@@ -564,15 +655,26 @@ SxXcoXre = glmer(
 ```
 
 ```{r}
-anova(conXrPh, Sex, SexXresp, SexXcon, SxXcoXre)
+ltsxx = anova(conXrPh, Sex, SexXresp, SexXcon, SxXcoXre)
+ltsxx
 ```
 
 No effect by sex of participant.
 
+```{r echo=F}
+write.csv(as.data.frame(ltsxx),"../results/lmerTests/SexInteractions.csv")
+rx  = getMEText(anova(SexXresp , Sex),"interaction between sex of participant and response phoneme")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(SexXresp , SexXcon),"interaction between sex of participant and context")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(SxXcoXre , SexXcon),"three way interaction between sex of participant, context and response phoneme")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
 *Interaction with trial*
 
 ```{r trialInteraction, cache=T}
-trialXCon = glmer(
+trialXCon = glmer( 
   answer ~ 1 + trialNumber.center +
     context * responsePhoneme +
     trialNumber.center:context +
@@ -613,18 +715,30 @@ trXcoXph = glmer(
 
 ```
 
-```{r}
-anova(conXrPh, trialXCon, trialXph, trXcoXph)
+```{r trialInteractionAnova, cache=T}
+lttrx = anova(conXrPh, trialXCon, trialXph, trXcoXph)
+lttrx
 ```
 
 Significant interaction between trial and context, but no reliable further interaction.
 
+```{r echo=F}
+write.csv(as.data.frame(lttrx),"../results/lmerTests/TrialInteractions.csv")
+rx  = getMEText(anova(conXrPh, trialXCon),"interaction between trial and context")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(trialXCon, trialXph),"interaction between trial and response phoneme")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+rx  = getMEText(anova(trialXph, trXcoXph),"three way interaction between trial, context and response phoneme")
+cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt", append = T)
+```
+
 \newpage
+
 *Effect of stimulus set*
 
 Below we adjust the random effects so that participants are nested within stimulus set (the variable *blockName*).
 
-```{r}
+```{r stimSetTest, cache=T}
 stimSet = glmer(
      answer ~ 1 + trialNumber.center +
          context * responsePhoneme +
@@ -645,6 +759,82 @@ The model does not converge, so the statistics from this model are not reliable.
 cbind(fixef(trialXCon),fixef(stimSet))
 ```
 
+\newpage
+
+## Check /h/ phoneme samples
+
+Only one stimuli set had a /h/ response phoneme, so we re-run the main analysis without those trials.
+
+```{r checkH, cache=T}
+
+takeOutSet = d[d$response.firstO=='h',]$setNum[1]
+
+trialH = glmer(
+  answer ~ 1 + trialNumber.center +
+    (1 + context | partID) +   
+    (0 + responsePhoneme | partID) +
+    (1 | contextSample) +
+    (1 | responseSample),   
+  data = d[d$setNum != takeOutSet,],
+  family = binomial,
+  control = gcontrol
+)
+
+contextH = glmer( 
+  answer ~ 1 + trialNumber.center + 
+    context +
+    (1 + context | partID) +   
+    (0 + responsePhoneme | partID) +
+    (1 | contextSample) +
+    (1 | responseSample) ,   
+  data = d[d$setNum != takeOutSet,],
+  family = binomial,
+  control = gcontrol
+)
+
+rPhonH = glmer(
+  answer ~ 1 + trialNumber.center + 
+    context + responsePhoneme +
+    (1 + context | partID) +   
+    (0 + responsePhoneme | partID) +
+    (1 | contextSample) +
+    (1 | responseSample),    
+  data = d[d$setNum != takeOutSet,],
+  family = binomial,
+  control = gcontrol
+)
+
+conXrPhH = glmer(
+  answer ~ 1 + trialNumber.center +
+    context * responsePhoneme +
+    (1 + context | partID) +   
+    (0 + responsePhoneme | partID) +
+    (1 | contextSample) +
+    (1 | responseSample),   
+  data = d[d$setNum != takeOutSet,],
+  family = binomial,
+  control = gcontrol
+)
+
+trialXConH = glmer( 
+  answer ~ 1 + trialNumber.center +
+    context * responsePhoneme +
+    trialNumber.center:context +
+    (1 + context | partID) +   
+    (0 + responsePhoneme | partID) +
+    (1 | contextSample) +
+    (1 | responseSample),   
+  data = d[d$setNum != takeOutSet,],
+  family = binomial,
+  control = gcontrol
+)
+
+anova(trialH, contextH,rPhonH, conXrPhH, trialXConH)
+
+summary(trialXConH)$coef
+```
+
+There are no qualitative differences when removing these trials.
 
 \newpage
 
@@ -653,8 +843,15 @@ cbind(fixef(trialXCon),fixef(stimSet))
 Model comparison
 
 ```{r}
-anova(m0, trial, context,rPhon, conXrPh, trialXCon)
+mainResults = anova(m0, trial, context,rPhon, conXrPh, trialXCon)
+mainResults
 ```
+
+```{r echo=F}
+write.csv(as.data.frame(mainResults), "../results/MainAnovaTest.csv")
+```
+
+
 \newpage
 
 ### Fixed effects
@@ -671,9 +868,12 @@ Relevel the response phoneme to see other comparisons:
 
 ```{r}
 d2 = d
-d2$responsePhoneme = relevel(d2$responsePhoneme,"wh")
+d2$responsePhoneme = relevel(d2$responsePhoneme,"other")
 fm2 = update(finalModel, data=d2)
 summary(fm2)
+
+write.csv(as.data.frame(summary(fm2)$coef),
+          "../results/FinalModelCoefficients_relevel.csv")
 ```
 
 Confidence intervals (through Wald method):
@@ -772,10 +972,12 @@ feLabels = matrix(c(
   "trialNumber.center", "Trial",NA,
   "contextST", "Context = Statement", "context",
   "contextIN", "Context = Initiating", "context",
-  "responsePhonemenone", "no response", 'rPhon',
+  "responsePhonemenone", "No response", 'rPhon',
   "responsePhonemewh", "wh response", 'rPhon',
+  "responsePhonemeother","Other response", 'rPhon',
   "contextIN:responsePhonemenone", "Context = In: no response", "conXrPh",
   "contextIN:responsePhonemewh", "Context = In: wh response", "conXrPh",
+  "contextIN:responsePhonemeother", "Context = In: other response", "conXrPh",
   "trialNumber.center:contextIN","Trial:Context = In",'trialXCon'
 ), ncol=3, byrow = T)
 
@@ -787,7 +989,7 @@ feLabels2 = as.vector(feLabels[match(names(fixef(finalModel)),feLabels[,1]),2])
 
 
 ```{r finalModelFixedEffects, cache=T}
-sjp.glmer(finalModel,'fe', 
+sjp.glmer(finalModel,'fe',  
           show.intercept = T,
           geom.colors = c(1,1),
           axis.title = "Odds of selecting question",
@@ -804,12 +1006,12 @@ sjp.glmer(finalModel,'fe',
 
 ```{r rawDataPlots, cache=T}
 
-d$responsePhoneme = relevel(d$responsePhoneme,'none')
+d$responsePhoneme2 = relevel(relevel(d$responsePhoneme,'other'),'none')
 
-sumStats = group_by(d, partID ,context,responsePhoneme ) %>%
-              summarise(mean =mean(answer))
+sumStats = group_by(d, partID ,context,responsePhoneme2 ) %>%
+              summarise(mean =mean(answer) )
 
-sumStats2 = summarySE(sumStats, measurevar="mean", groupvars=c("context","responsePhoneme"))
+sumStats2 = summarySE(sumStats, measurevar="mean", groupvars=c("context","responsePhoneme2"))
 sumStats2$upper = sumStats2$mean + sumStats2$ci
 sumStats2$lower = sumStats2$mean - sumStats2$ci
 
@@ -818,11 +1020,11 @@ sumStats2
 dodge <- position_dodge(width=0.5) 
 
 main.plot <- ggplot(sumStats2,
-	aes(x = responsePhoneme, y = mean, colour=context)) +
+	aes(x = responsePhoneme2, y = mean, colour=context)) +
   geom_point() + geom_line(aes(group=context)) +
   geom_errorbar(aes(ymax=mean+ci, ymin=mean-ci), width=0.25) +
   xlab("First Phoneme in Response") +
-  ylab("Proportion of 'Question' responses") +
+  ylab("Proportion of 'Question' answers") +
   coord_cartesian(ylim=c(0,1)) + 
   scale_color_discrete(breaks=c("ST","IN"),
                        labels=c("Statement","Initiating"),
@@ -837,11 +1039,11 @@ dev.off()
 
 
 main.plot2 <- ggplot(sumStats2,
-	aes(x = context, y = mean, colour=responsePhoneme)) +
-  geom_point(position=dodge) + geom_line(aes(group=responsePhoneme), position=dodge) +
+	aes(x = context, y = mean, colour=responsePhoneme2)) +
+  geom_point(position=dodge) + geom_line(aes(group=responsePhoneme2), position=dodge) +
   geom_errorbar(aes(ymax=mean+ci, ymin=mean-ci), width=0.25, position=dodge) +
   xlab("Previous turn type (context)") +
-  ylab("Proportion of 'Question' responses") +
+  ylab("Proportion of 'Question' answers") +
   coord_cartesian(ylim=c(0,1)) + 
   scale_color_discrete(breaks=c("none","other",'wh'),
                        labels=c("None","Non-wh","wh"),
