@@ -944,23 +944,14 @@ Here is a summary of the main results:
 Work out model esimates for probabilities in each condition:
   
 ```{r}
-# prob of responding 'yes' when:
-# Context = ST, other response
-logit2per(fixef(finalModel)[1])[[1]]
-# Context = ST, no response 
-logit2per(fixef(finalModel)[1] + fixef(finalModel)["responsePhonemenone"]  )[[1]]
-# Context = ST, wh
-logit2per(fixef(finalModel)[1] + fixef(finalModel)["responsePhonemewh"]  )[[1]]
-# Context = IN, other response
-logit2per(fixef(finalModel)[1] + fixef(finalModel)["contextIN"])[[1]]
-# Context = IN, no response
-logit2per(fixef(finalModel)[1] + 
-            fixef(finalModel)["contextIN"] +
-            fixef(finalModel)["responsePhonemenone"])[[1]]
-# Context = IN, wh
-logit2per(fixef(finalModel)[1] + 
-            fixef(finalModel)["contextIN"] +
-            fixef(finalModel)["responsePhonemewh"])[[1]]
+newD = data.frame(context=c("IN","IN","IN","ST","ST",'ST'),
+         responsePhoneme = c("none","other","wh",'none','other','wh'),
+         trialNumber.center = c(0,0,0,0,0,0))
+rownames(newD) = c("IN + none", "IN + other", "IN + wh",
+                   "ST + none", "ST + other", "ST + wh")
+prx = predict(finalModel,re.form=NA,newdata=newD)
+
+t(t(logit2per(prx)))
 
 
 ```
