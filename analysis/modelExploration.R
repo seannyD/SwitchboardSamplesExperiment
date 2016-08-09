@@ -34,6 +34,7 @@ min(tt[ll==0])
 derivs1 <- m3@optinfo$derivs
 sc_grad1 <- with(derivs1,solve(Hessian,gradient))
 max(abs(sc_grad1))
+max(pmin(abs(sc_grad1),abs(derivs1$gradient)))
 
 # Low but not problematic
 
@@ -126,7 +127,7 @@ lapply(aa.OK,function(x) x@optinfo$conv$lme4$messages)
 
 
 # look at log likelihoods
-(lliks <- sort(sapply(aa.OK,logLik)))
+t(t(lliks <- sort(sapply(aa.OK,logLik))))
 
 # [,1]
 # Nelder_Mead                   -897.8444

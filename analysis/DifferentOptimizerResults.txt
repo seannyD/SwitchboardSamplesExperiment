@@ -1,0 +1,36 @@
+$bobyqa
+$bobyqa[[1]]
+[1] "Model failed to converge with max|grad| = 0.0779659 (tol = 0.001, component 1)"
+
+$bobyqa[[2]]
+[1] "Model is nearly unidentifiable: very large eigenvalue\n - Rescale variables?"
+
+
+$Nelder_Mead
+[1] "Model failed to converge with max|grad| = 0.818899 (tol = 0.001, component 1)"
+
+$nlminbw
+NULL
+
+$nmkbw
+[1] "Model failed to converge with max|grad| = 0.00395154 (tol = 0.001, component 1)"
+
+$`optimx.L-BFGS-B`
+[1] "Model failed to converge with max|grad| = 0.00228004 (tol = 0.001, component 1)"
+
+$nloptwrap.NLOPT_LN_NELDERMEAD
+[1] "Model failed to converge with max|grad| = 0.127479 (tol = 0.001, component 1)"
+
+$nloptwrap.NLOPT_LN_BOBYQA
+[1] "Model failed to converge with max|grad| = 0.127479 (tol = 0.001, component 1)"
+
+####
+
+[,1]
+Nelder_Mead                   -482.3682
+bobyqa                        -481.4402
+nloptwrap.NLOPT_LN_NELDERMEAD -481.2140
+nloptwrap.NLOPT_LN_BOBYQA     -481.2140
+nmkbw                         -481.2042
+optimx.L-BFGS-B               -481.2041
+nlminbw                       -481.2041
