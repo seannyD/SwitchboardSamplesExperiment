@@ -498,6 +498,8 @@ cat(paste(rx,"\n\n",collapse=''), file="../results/lmerTests/lmerTestSummary.txt
 
 *Age of participants*
 
+(does't converge with nlminb, so using bobyqa)
+
 ```{r}
 age = glmer( 
   answer ~ 1 + trialNumber.center + Age +
@@ -903,6 +905,11 @@ for(i in 1:ncol(x)){
 
 ```
 
+Correlation between random effects for poarticipants:
+
+```{r}
+plot(ranef(finalModel)$partID)
+```
 
 \newpage
 
@@ -1106,5 +1113,21 @@ anova(m0T, respT, respTXco, respTXrp, rTXcoXrp)
 
 No effects of actual response type.
 
+# Note on different optimisers
 
+The nlminb optimiser was used instead of the default bobyqa and Nelder-Mead optimisers.  The deafult settings caused convergence problems for the model with the interaction between responsePhoneme and context, probably due to the lack of variation in some of the conditions.  Several other optimisers were tried, and the main results remained qualitatively the same (main effect of context, main effect of responsePhoneme, no interaction).
+
+For the `conXrPh` model above, 7 different optimiser settings were tried (following [this approach](https://rstudio-pubs-static.s3.amazonaws.com/33653_57fc7b8e5d484c909b615d8633c01d51.html)), all but nlminbw produced convergence warnings.  The optimisers returned very similar log liklihoods:
+
+-  Nelder_Mead                   -482.3682
+-  bobyqa                        -481.4402
+-  nloptwrap.NLOPT_LN_NELDERMEAD -481.2140
+-  nloptwrap.NLOPT_LN_BOBYQA     -481.2140
+-  nmkbw                         -481.2042
+-  optimx.L-BFGS-B               -481.2041
+-  nlminbw                       -481.2041
+
+Below is a summary of the estimates for different fixed effects for different optimisers for the `conXrPh` model above.  The estimates vary little between the runs.
+
+![DifferentOptimizerResults](DifferentOptimizerResults.pdf)
 
