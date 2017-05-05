@@ -747,15 +747,20 @@ sumStats2$lower = sumStats2$mean - sumStats2$ci
 
 dodge <- position_dodge(width=0.5) 
 
+hues = seq(15, 375, length = 3 + 1)
+hues = hcl(h = hues, l = 65, c = 100)[1:3]
+
+sumStats2$shape = c("a",'b','c','a','b','c')
+
 main.plot <- ggplot(sumStats2,
 	aes(x = responsePhoneme, y = mean, colour=context)) +
-  geom_point() + geom_line(aes(group=context)) +
+  geom_point(mapping=aes(shape=shape, size=8),show.legend=F) + #geom_line(aes(group=context)) +
   geom_errorbar(aes(ymax=mean+ci, ymin=mean-ci), width=0.25) +
   xlab("First Phoneme in Response") +
   ylab("Proportion of 'Question' responses") +
   coord_cartesian(ylim=c(0,1)) + 
   scale_color_discrete(breaks=c("ST","IN"),
-                       labels=c("Statement","Initiating"),
+                       labels=c("Non-Initiating","Initiating"),
                        name="Context")
 
 main.plot
@@ -766,20 +771,25 @@ main.plot
 dev.off()
 
 
+####
 main.plot2 <- ggplot(sumStats2,
-	aes(x = context, y = mean, colour=responsePhoneme)) +
-  geom_point(position=dodge) + geom_line(aes(group=responsePhoneme), position=dodge) +
+	aes(x = context, y = mean, colour=responsePhoneme, shape=shape)) +
+  geom_point(size=5,position=dodge) + 
+  geom_line(aes(group=responsePhoneme), position=dodge) +
   geom_errorbar(aes(ymax=mean+ci, ymin=mean-ci), width=0.25, position=dodge) +
   xlab("Previous turn type (context)") +
   ylab("Proportion of 'Question' responses") +
   coord_cartesian(ylim=c(0,1)) + 
-  scale_color_discrete(breaks=c("none","other",'wh'),
-                       labels=c("None","Non-wh","wh"),
-                       name="First phoneme") +
+  scale_color_manual("First Phoneme",labels=(c("None","Other","wh")),
+                     values = (hues),
+                     breaks = c("none",'other','wh'))+
+  scale_shape_manual("First Phoneme",labels=(c("None","Other","wh")),values = (c(17,18,19))) +
   scale_x_discrete(breaks=c("ST", "IN"),
-                      labels=c("Statement", "Initiating"))
-
+                      labels=c("Non-Initiating", "Initiating"))
 main.plot2
+
+###
+
 
 pdf("../results/graphs/PropQResponses_by_context_withPartCI.pdf",
     width = 4, height=3)
