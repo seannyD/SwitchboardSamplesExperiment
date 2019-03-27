@@ -749,19 +749,28 @@ dodge <- position_dodge(width=0.5)
 
 hues = seq(15, 375, length = 3 + 1)
 hues = hcl(h = hues, l = 65, c = 100)[1:3]
+hues2 = seq(15, 375, length = 2 + 1)
+hues2 = hcl(h = hues2, l = 65, c = 100)[1:2]
 
 sumStats2$shape = c("a",'b','c','a','b','c')
+sumStats2$shape2 = c("a",'a','a','b','b','b')
 
 main.plot <- ggplot(sumStats2,
-	aes(x = responsePhoneme, y = mean, colour=context)) +
-  geom_point(mapping=aes(shape=shape, size=8),show.legend=F) + #geom_line(aes(group=context)) +
+	aes(x = responsePhoneme, y = mean, colour=context, shape=shape2)) +
+  geom_point(size=5,show.legend=T) + #geom_line(aes(group=context)) +
   geom_errorbar(aes(ymax=mean+ci, ymin=mean-ci), width=0.25) +
   xlab("First Phoneme in Response") +
   ylab("Proportion of 'Question' responses") +
   coord_cartesian(ylim=c(0,1)) + 
-  scale_color_discrete(breaks=c("ST","IN"),
-                       labels=c("Non-Initiating","Initiating"),
-                       name="Context")
+  scale_color_manual(
+    breaks=c("ST","IN"),
+    labels=c("Non-Initiating","Initiating"),
+    values=hues2,
+    name="Context") +
+  scale_shape_manual(
+    labels=c("Non-Initiating","Initiating"),
+    name="Context",
+    values = c(16,17))
 
 main.plot
 
@@ -780,10 +789,12 @@ main.plot2 <- ggplot(sumStats2,
   xlab("Previous turn type (context)") +
   ylab("Proportion of 'Question' responses") +
   coord_cartesian(ylim=c(0,1)) + 
-  scale_color_manual("First Phoneme",labels=(c("None","Other","wh")),
-                     values = (hues),
-                     breaks = c("none",'other','wh'))+
-  scale_shape_manual("First Phoneme",labels=(c("None","Other","wh")),values = (c(17,18,19))) +
+  scale_color_manual("First Phoneme",
+                     labels=(c("None","Other","wh")),
+                     values = (hues))+
+  scale_shape_manual("First Phoneme",
+                     labels=(c("None","Other","wh")),
+                     values = (c(17,18,19))) +
   scale_x_discrete(breaks=c("ST", "IN"),
                       labels=c("Non-Initiating", "Initiating"))
 main.plot2
